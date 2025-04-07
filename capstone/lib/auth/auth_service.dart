@@ -23,7 +23,7 @@ class AuthService {
     try {
       final normalizedUsername = username.toLowerCase();
 
-      // Check if username exists
+      
       final usernameDoc =
           await _firestore
               .collection('usernames')
@@ -34,7 +34,7 @@ class AuthService {
         throw AuthException('Username already taken');
       }
 
-      // Create user
+      
       final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
@@ -42,16 +42,14 @@ class AuthService {
 
       final uid = userCredential.user!.uid;
 
-      // Batch write to ensure atomic operations
       final batch = _firestore.batch();
 
-      // Set username mapping
       batch.set(_firestore.collection('usernames').doc(normalizedUsername), {
         'email': email,
         'uid': uid,
       });
 
-      // Create user profile
+     
       batch.set(_firestore.collection('users').doc(uid), {
         'username': normalizedUsername,
         'email': email,
@@ -62,7 +60,6 @@ class AuthService {
 
       await batch.commit();
 
-      // Update auth profile
       await userCredential.user!.updateDisplayName(fullName);
       if (photoUrl != null && photoUrl.isNotEmpty) {
         await userCredential.user!.updatePhotoURL(photoUrl);
