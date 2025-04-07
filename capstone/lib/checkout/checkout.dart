@@ -5,6 +5,8 @@ void main() {
 }
 
 class CheckOut extends StatelessWidget {
+  const CheckOut({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(home: CheckoutPage());
@@ -12,6 +14,8 @@ class CheckOut extends StatelessWidget {
 }
 
 class CheckoutPage extends StatefulWidget {
+  const CheckoutPage({super.key});
+
   @override
   _CheckoutPageState createState() => _CheckoutPageState();
 }
