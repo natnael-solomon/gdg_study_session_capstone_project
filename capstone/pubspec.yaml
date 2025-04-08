@@ -14,7 +14,7 @@ dependencies:
   flutter:
     sdk: flutter
 
- 
+  google_fonts: ^6.1.0
   cupertino_icons: ^1.0.8
   cloud_firestore: ^5.6.6
   firebase_auth: ^5.5.2
@@ -39,6 +39,13 @@ flutter:
      - assets/creditcard.png
      - assets/coin.png
      - assets/loc.png
+       assets/images/six.png
+    - assets/images/two.jpg
+    - assets/images/one.jpg
+    - assets/images/four.png
+    - assets/images/three.jpg
+    - assets/images/five.png
+    - assets/images/images.jpg
 
   fonts:
     - family: Poppins
