@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_service.dart';
+import 'signup_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,7 +20,6 @@ class _LoginPageState extends State<LoginPage>
   late Animation<Offset> _animation;
   bool _obscurePassword = true;
   bool _isLoading = false;
-  String? _usernameError;
   String? _passwordError;
 
   @override
@@ -51,8 +51,6 @@ class _LoginPageState extends State<LoginPage>
 
     setState(() {
       _isLoading = true;
-      _usernameError = null;
-      _passwordError = null;
     });
 
     try {
@@ -78,13 +76,7 @@ class _LoginPageState extends State<LoginPage>
   }
 
   void _handleAuthError(AuthException e) {
-    if (e.message.toLowerCase().contains('username')) {
-      setState(() => _usernameError = e.message);
-    } else if (e.message.toLowerCase().contains('password')) {
       setState(() => _passwordError = e.message);
-    } else {
-      _showErrorDialog(e.message);
-    }
   }
 
   void _showErrorDialog(String message) {
@@ -119,13 +111,13 @@ class _LoginPageState extends State<LoginPage>
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Container(
-                height: MediaQuery.of(context).size.height * 0.75,
+                height: MediaQuery.of(context).size.height * 0.85,
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(40)),
+                  borderRadius: BorderRadius.only(topLeft: Radius.circular(70)),
                 ),
                 child: SafeArea(
-                  top: false, // ignore top since it’s already aligned bottom
+                  top: false, 
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       return Container(
@@ -162,7 +154,7 @@ class _LoginPageState extends State<LoginPage>
                                       ),
                                       const SizedBox(height: 40),
                                       _buildUsernameField(),
-                                      const SizedBox(height: 20),
+                                      const SizedBox(height: 30),
                                       _buildPasswordField(),
                                     ],
                                   ),
@@ -195,9 +187,10 @@ class _LoginPageState extends State<LoginPage>
       controller: _usernameController,
       decoration: InputDecoration(
         labelText: 'Username',
-        prefixIcon: const Icon(Icons.person),
-        errorText: _usernameError,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        labelStyle: const TextStyle(),
+        prefixIcon: const Icon(Icons.person_outline),
+        errorText: null,
+        border: UnderlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -214,15 +207,17 @@ class _LoginPageState extends State<LoginPage>
       obscureText: _obscurePassword,
       decoration: InputDecoration(
         labelText: 'Password',
-        prefixIcon: const Icon(Icons.lock),
+        prefixIcon: const Icon(Icons.lock_outline),
         suffixIcon: IconButton(
           icon: Icon(
-            _obscurePassword ? Icons.visibility : Icons.visibility_off,
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
           ),
           onPressed: _togglePasswordVisibility,
         ),
         errorText: _passwordError,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: UnderlineInputBorder(),
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
@@ -238,8 +233,8 @@ class _LoginPageState extends State<LoginPage>
 
   Widget _buildLoginButton() {
     return SizedBox(
-      width: 400,
-      height: 60,
+      width: 248,
+      height: 48,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF6055D8),
@@ -254,9 +249,9 @@ class _LoginPageState extends State<LoginPage>
                   valueColor: AlwaysStoppedAnimation(Colors.white),
                 )
                 : const Text(
-                  'Login',
+                  'Log In',
                   style: TextStyle(
-                    fontSize: 25,
+                    fontSize: 20,
                     fontFamily: 'Poppins',
                     fontWeight: FontWeight.w800,
                     letterSpacing: 0.5,
@@ -271,10 +266,13 @@ class _LoginPageState extends State<LoginPage>
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text("Don't have account?", style: TextStyle(fontSize: 15)),
+        Text("Don't have an account?", style: TextStyle(fontSize: 15)),
         TextButton(
           onPressed: () {
-            // Navigate to sign up page
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const SignUpPage()),
+            );
           },
           child: const Text(
             "Sign up",
