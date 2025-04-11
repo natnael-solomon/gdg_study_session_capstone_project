@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'product_detail_screen.dart';
-import 'package:capstone/product.dart'; // Shared Product model
+import 'package:capstone/products/product.dart'; // Shared Product model
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
