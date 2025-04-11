@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:capstone/product.dart';
+import 'package:capstone/products/product.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
