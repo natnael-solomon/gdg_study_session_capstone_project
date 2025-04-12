@@ -1,9 +1,44 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:capstone_landing_page_project/models/user.dart';
 import 'package:capstone_landing_page_project/models/products.dart';
+class MyCarouselWidget extends StatelessWidget{
+  final List<String> imageList = [
+    "assets/images/1.jpg",
+    "assets/images/2.jpg",
+    "assets/images/3.jpeg",
+    "assets/images/4.jpeg",
+  ];
+  @override
+  Widget build(BuildContext context){
+    return CarouselSlider(
+      options: CarouselOptions(
+        height: 150.0,
+        autoPlay: true,
+        enlargeCenterPage: true,
+        viewportFraction: 1.0,
+        enableInfiniteScroll: true,
 
+      ),
+      items: imageList.map((imagePath){
+        return Builder(
+          builder: (BuildContext context){
+            return ClipRRect(
+              borderRadius:BorderRadius.circular(5),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
+            );
+          }
+        );
+      }).toList(),
+    );
+  }
+}
 Future<User> fetchUser(int userId) async {
   final url = Uri.parse("https://fakestoreapi.com/users/$userId");
   final response = await http.get(url);
@@ -55,7 +90,8 @@ class _UserDashboardState extends State<UserDashboard> {
           } else if (snapshot.hasData) {
             final user = snapshot.data![0] as User;
             final products = snapshot.data![1] as List<Products>;
-            return Column(
+            return SingleChildScrollView(
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
@@ -136,68 +172,31 @@ class _UserDashboardState extends State<UserDashboard> {
                             ],
                             )
                         ],
+                      
+                      ),
+                      SizedBox(height: 20),
+                      MyCarouselWidget(),
+                      SizedBox(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                       
+                          Text("Featured",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text("See all",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ]
 
                       ),
-                      Text(
-                        "User ID: ${user.id}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Name: ${user.name.firstname} ${user.name.lastname}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Email: ${user.email}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Username: ${user.username}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Phone: ${user.phone}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Address: ${user.address.street}, ${user.address.city}, ${user.address.zipcode}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Address Number: ${user.address.number}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        "Address Geolocation: ${user.address.geolocation.lat}, ${user.address.geolocation.long}",
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20),
+ SizedBox(height: 10),
                 SizedBox(
                   height: 150,
                   child: ListView.builder(
@@ -209,6 +208,8 @@ class _UserDashboardState extends State<UserDashboard> {
                         width: 120,
                         margin: EdgeInsets.symmetric(horizontal: 10),
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Expanded(
                               child: ClipRRect(
@@ -230,19 +231,132 @@ class _UserDashboardState extends State<UserDashboard> {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
+                              Text(
+                              "\$${product.price}",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color:Colors.lightBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ],
                         ),
                       );
                     },
                   ),
                 ),
+                SizedBox(height: 20),
+                Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                       
+                          Text("Most Popular",
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text("See all",
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.normal,
+                            ),
+                          ),
+                        ]
+
+                      ),
+ SizedBox(height: 10),
+                SizedBox(
+                  height: 150,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: 5,
+                    itemBuilder: (context, index) {
+                      final product = products[index+5];
+                      return Container(
+                        width: 120,
+                        margin: EdgeInsets.symmetric(horizontal: 10),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.network(
+                                  product.image,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              product.title,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                              Text(
+                              "\$${product.price}",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color:Colors.lightBlue,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
+                    ],
+                  ),
+ 
+                ),
+               
               ],
+
+              ),
+
             );
           } else {
             return Center(child: Text('No data found'));
           }
         },
       ),
+      bottomNavigationBar:BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+
+        iconSize: 30,
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: "",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: "",
+          ),
+        ],
+      )
     );
   }
 }
