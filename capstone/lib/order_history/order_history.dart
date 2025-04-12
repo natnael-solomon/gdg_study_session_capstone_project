@@ -9,6 +9,8 @@ void main() {
 }
 
 class OrdersScreen extends StatefulWidget {
+  const OrdersScreen({super.key});
+
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
 }

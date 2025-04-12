@@ -60,7 +60,7 @@ class _UserDashboardState extends State<UserDashboard> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 Padding(
-                  padding: EdgeInsets.all(12.0),
+                  padding: EdgeInsets.only(left: 20, right: 20, top: 5),
                   child: Column(
                     children: [
                       Row(
@@ -69,23 +69,74 @@ class _UserDashboardState extends State<UserDashboard> {
                           Row(
                             children:[
                               ClipRRect(
-                                borderRadius: BorderRadius.circular(50),
+                                borderRadius: BorderRadius.circular(100),
                                 child: Image.asset(
                                   "assets/images/person.jpg",
                                   width: 50,
-                                  height: 50,
-                    
+                                  height: 50, // Make height equal to width
+                                  fit: BoxFit.cover, // Ensure the image fits properly
                                 ),
+                              ),
+                              SizedBox(width: 10), 
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Hello!",
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.normal,
+                                    ),
+                                  ),
+                                  Text(
+                                    "${user.name.firstname} ${user.name.lastname}",
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               )
                             ]
                           ),
                           IconButton(
+                            iconSize: 30,
                             icon: Icon(Icons.notification_add),
                             onPressed: () {
                               // Handle logout action
                             },
                           ),
                         ],
+                      ),
+                      SizedBox(height: 20),
+                      Stack(
+                        children: [
+                            Row(
+                            children: [
+                              SizedBox(width: 10),
+                              Expanded(
+                              child: TextField(
+                                decoration: InputDecoration(
+                                hintText: "Search",
+                                prefixIcon: Icon(Icons.search),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                  borderSide: BorderSide.none,
+                                ),
+                                filled: true,
+                                fillColor: const Color.fromARGB(255, 227, 227, 227),
+                                ),
+                                onChanged: (value) {
+                                // Handle search input
+                                },
+                              ),
+                              ),
+
+                            ],
+                            )
+                        ],
+
                       ),
                       Text(
                         "User ID: ${user.id}",
