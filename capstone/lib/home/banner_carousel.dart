@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; // ✅ Import for Poppins
 
 class BannerCarousel extends StatefulWidget {
   final Color accentColor;
@@ -37,7 +38,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
   late PageController _pageController;
   int _currentIndex = 0;
   Timer? _carouselTimer;
-  bool _isForward = true; /*swipe direction*/
+  bool _isForward = true;
 
   @override
   void initState() {
@@ -47,12 +48,12 @@ class _BannerCarouselState extends State<BannerCarousel> {
   }
 
   void _startAutoCarousel() {
-    _carouselTimer?.cancel(); 
+    _carouselTimer?.cancel();
     _carouselTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_pageController.hasClients) return;
 
       if (_currentIndex == _banners.length - 1) {
-        _isForward = false; 
+        _isForward = false;
       } else if (_currentIndex == 0) {
         _isForward = true;
       }
@@ -79,7 +80,7 @@ class _BannerCarouselState extends State<BannerCarousel> {
     return Column(
       children: [
         SizedBox(
-          height: 180,
+          height: 140,
           child: PageView.builder(
             controller: _pageController,
             onPageChanged: (index) => setState(() => _currentIndex = index),
@@ -102,25 +103,25 @@ class _BannerCarouselState extends State<BannerCarousel> {
                   children: [
                     Text(
                       banner['title'],
-                      style: const TextStyle(
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       banner['subtitle'],
-                      style: const TextStyle(
+                      style: GoogleFonts.poppins(
                         color: Colors.white,
                         fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       banner['description'],
-                      style: const TextStyle(color: Colors.white),
+                      style: GoogleFonts.poppins(color: Colors.white),
                     ),
                   ],
                 ),

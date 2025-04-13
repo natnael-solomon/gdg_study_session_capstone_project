@@ -30,4 +30,6 @@ class Product {
       rating: Rating.fromJson(json['rating']),
     );
   }
+
+  String get name => title;
 }

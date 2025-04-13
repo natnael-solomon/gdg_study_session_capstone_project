@@ -180,7 +180,7 @@ class OrderCard extends StatelessWidget {
   final String imageUrl;
   final String status;
 
-  const OrderCard({
+  const OrderCard({super.key, 
     required this.title,
     required this.brand,
     required this.price,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart'; 
 
 class SectionHeader extends StatelessWidget {
   final String title;
@@ -8,15 +9,27 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             title,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
           ),
-          const Text("See All", style: TextStyle(color: Colors.purple)),
+          TextButton(
+            onPressed:() => {Center(child: Text("hhhh"),)},
+            child: Text(
+              "See All",
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w500,
+                color: Colors.deepPurpleAccent,
+              ),
+            ),
+          ),
         ],
       ),
     );
