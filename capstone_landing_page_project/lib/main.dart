@@ -1,5 +1,7 @@
+import 'package:capstone_landing_page_project/UserDashboard.dart';
 import 'package:flutter/material.dart';
-import "package:capstone_landing_page_project/UserDashboard.dart";
+import "package:capstone_landing_page_project/ProductPage.dart";
+import "package:capstone_landing_page_project/ProfilePage.dart";
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
