@@ -1,8 +1,13 @@
+import 'package:capstone_landing_page_project/ProductPage.dart';
+import 'package:capstone_landing_page_project/ProfilePage.dart';
+import 'package:capstone_landing_page_project/ProductDetailScreen.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:capstone_landing_page_project/models/user.dart';
 import 'package:capstone_landing_page_project/models/products.dart';
+import 'package:capstone_landing_page_project/UserDashboard.dart';
 import 'package:capstone_landing_page_project/SettingPage.dart';
 Future<User> fetchUser(int userId) async {
   final url = Uri.parse("https://fakestoreapi.com/users/$userId");
@@ -203,11 +208,42 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ],
           currentIndex: 3,
-          selectedItemColor: Colors.blue, // Customize the selected item color
+          selectedItemColor:
+              Colors.blue, // Customize the selected item color
           unselectedItemColor:
               Colors.grey[600], // Customize the unselected item color
           showSelectedLabels: false,
           showUnselectedLabels: false,
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserDashboard()),
+                );
+                break;
+              case 1:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProductPage()),
+                );
+                break;
+              case 2:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductDetailScreen(productId: 1),
+                  ),
+                );
+                break;
+              case 3:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+                break;
+            }
+          },
         ),
       ),
     );

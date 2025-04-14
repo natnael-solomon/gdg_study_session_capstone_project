@@ -10,6 +10,7 @@ import 'package:capstone_landing_page_project/models/products.dart';
 
 class MyCarouselWidget extends StatelessWidget {
   final List<String> imageList = [
+    "assets/images/1.png",
     "assets/images/1.jpg",
     "assets/images/2.jpg",
     "assets/images/3.jpeg",
@@ -25,21 +26,20 @@ class MyCarouselWidget extends StatelessWidget {
         viewportFraction: 1.0,
         enableInfiniteScroll: true,
       ),
-      items:
-          imageList.map((imagePath) {
-            return Builder(
-              builder: (BuildContext context) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(5),
-                  child: Image.asset(
-                    imagePath,
-                    fit: BoxFit.cover,
-                    width: double.infinity,
-                  ),
-                );
-              },
+      items: imageList.map((imagePath) {
+        return Builder(
+          builder: (BuildContext context) {
+            return ClipRRect(
+              borderRadius: BorderRadius.circular(5),
+              child: Image.asset(
+                imagePath,
+                fit: BoxFit.cover,
+                width: double.infinity,
+              ),
             );
-          }).toList(),
+          },
+        );
+      }).toList(),
     );
   }
 }
@@ -67,7 +67,19 @@ Future<List<Products>> fetchProducts() async {
 }
 
 class UserDashboard extends StatefulWidget {
-  const UserDashboard({Key? key}) : super(key: key);
+  final String? username;
+  final String? password;
+  final String? email;
+  final String? fullName;
+
+  const UserDashboard({
+    super.key,
+     this.username,
+     this.email,
+     this.password,
+     this.fullName,
+  });
+
   @override
   _UserDashboardState createState() => _UserDashboardState();
 }
@@ -108,11 +120,11 @@ class _UserDashboardState extends State<UserDashboard> {
             final user = snapshot.data![0] as User;
             final products = snapshot.data![1] as List<Products>;
             return SingleChildScrollView(
-
               child: ConstrainedBox(
-                    constraints: BoxConstraints(
-                      minHeight: MediaQuery.of(context).size.height - kBottomNavigationBarHeight,
-                    ),
+                constraints: BoxConstraints(
+                  minHeight: MediaQuery.of(context).size.height -
+                      kBottomNavigationBarHeight,
+                ),
                 child: IntrinsicHeight(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,16 +144,18 @@ class _UserDashboardState extends State<UserDashboard> {
                                       child: Image.asset(
                                         "assets/images/person.jpg",
                                         width: 50,
-                                        height: 50, // Make height equal to width
-                                        fit:
-                                            BoxFit
-                                                .cover, // Ensure the image fits properly
+                                        height:
+                                            50, // Make height equal to width
+                                        fit: BoxFit
+                                            .cover, // Ensure the image fits properly
                                       ),
                                     ),
                                     SizedBox(width: 10),
                                     Column(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           "Hello!",
@@ -151,7 +165,7 @@ class _UserDashboardState extends State<UserDashboard> {
                                           ),
                                         ),
                                         Text(
-                                          "${user.name.firstname} ${user.name.lastname}",
+                                          "${widget.fullName}",
                                           style: TextStyle(
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
@@ -182,7 +196,8 @@ class _UserDashboardState extends State<UserDashboard> {
                                           hintText: "Search",
                                           prefixIcon: Icon(Icons.search),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(20),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
                                             borderSide: BorderSide.none,
                                           ),
                                           filled: true,
@@ -230,7 +245,6 @@ class _UserDashboardState extends State<UserDashboard> {
                                     ),
                                   ),
                                 )
-                  
                               ],
                             ),
                             SizedBox(height: 10),
@@ -241,27 +255,31 @@ class _UserDashboardState extends State<UserDashboard> {
                                 itemCount: 5,
                                 itemBuilder: (context, index) {
                                   final product = products[index];
-                                  return  
-                                  GestureDetector(
+                                  return GestureDetector(
                                     onTap: () {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => ProductDetailScreen(productId: product.id),
+                                          builder: (_) => ProductDetailScreen(
+                                              productId: product.id),
                                         ),
                                       );
                                     },
                                     child: Container(
                                       width: 120,
-                                      margin: EdgeInsets.symmetric(horizontal: 10),
+                                      margin:
+                                          EdgeInsets.symmetric(horizontal: 10),
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(
-                                            height:80,
+                                            height: 80,
                                             child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                               child: Image.network(
                                                 product.image,
                                                 fit: BoxFit.cover,
@@ -332,27 +350,31 @@ class _UserDashboardState extends State<UserDashboard> {
                                 itemCount: 5,
                                 itemBuilder: (context, index) {
                                   final product = products[index + 5];
-                                  return 
-                                  GestureDetector(
+                                  return GestureDetector(
                                     onTap: () {
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
-                                          builder: (_) => ProductDetailScreen(productId: product.id),
+                                          builder: (_) => ProductDetailScreen(
+                                              productId: product.id),
                                         ),
                                       );
                                     },
                                     child: Container(
                                       width: 120,
-                                      margin: EdgeInsets.symmetric(horizontal: 10),
+                                      margin:
+                                          EdgeInsets.symmetric(horizontal: 10),
                                       child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           SizedBox(
-                                            height:80,
+                                            height: 80,
                                             child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(10),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
                                               child: Image.network(
                                                 product.image,
                                                 fit: BoxFit.cover,
@@ -401,9 +423,8 @@ class _UserDashboardState extends State<UserDashboard> {
         },
       ),
       bottomNavigationBar: Container(
-        color:
-            Colors
-                .white, // Customize the bottom navigation bar background color
+        color: Colors
+            .white, // Customize the bottom navigation bar background color
         child: BottomNavigationBar(
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: ''),
@@ -426,6 +447,35 @@ class _UserDashboardState extends State<UserDashboard> {
               Colors.grey[600], // Customize the unselected item color
           showSelectedLabels: false,
           showUnselectedLabels: false,
+          onTap: (index) {
+            switch (index) {
+              // case 0:
+              //   Navigator.pushReplacement(
+              //     context,
+              //     MaterialPageRoute(builder: (context) => UserDashboard()),
+              //   );
+                // break;
+              case 1:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProductPage()),
+                );
+                break;
+              case 2:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => ProductDetailScreen(productId: 1)),
+                );
+                break;
+              case 3:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+                break;
+            }
+          },
         ),
       ),
     );

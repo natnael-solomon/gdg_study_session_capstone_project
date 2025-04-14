@@ -15,13 +15,13 @@ Future<User> fetchUser(int userId) async {
   }
 }
 
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+class SettingPage extends StatefulWidget {
+  const SettingPage({Key? key}) : super(key: key);
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _SettingPageState createState() => _SettingPageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _SettingPageState extends State<SettingPage> {
   final int userId = 1;
   late Future<User> futureUser;
   @override

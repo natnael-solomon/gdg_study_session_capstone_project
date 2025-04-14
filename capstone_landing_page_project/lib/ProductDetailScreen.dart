@@ -4,6 +4,9 @@ import 'package:http/http.dart' as http;
 import 'package:capstone_landing_page_project/models/user.dart';
 import 'package:capstone_landing_page_project/models/products.dart';
 import 'package:capstone_landing_page_project/ProductDetailScreen.dart';
+import 'package:capstone_landing_page_project/ProductPage.dart';
+import 'package:capstone_landing_page_project/ProfilePage.dart';
+import 'package:capstone_landing_page_project/UserDashboard.dart';
 Future<Products> fetchProduct(int productId) async {
   final url = Uri.parse("https://fakestoreapi.com/products/$productId");
   final response = await http.get(url);
@@ -291,24 +294,65 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           }
         },
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        // currentIndex: _selectedIndex,
-        // onTap: -onItemTapped,
-        iconSize: 30,
-        items: [
-          BottomNavigationBarItem(
-            activeIcon: Icon(
-              Icons.home,
-              color: const Color.fromARGB(255, 91, 87, 87),
+      bottomNavigationBar: Container(
+        color:
+            Colors
+                .white, // Customize the bottom navigation bar background color
+        child: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: ''),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search_outlined),
+              label: '',
             ),
-            icon: Icon(Icons.home),
-            label: "",
-          ),
-          BottomNavigationBarItem(icon: Icon(Icons.search), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: ""),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: ""),
-        ],
+            BottomNavigationBarItem(
+              icon: Icon(Icons.shopping_bag_outlined),
+              label: '',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              label: '',
+            ),
+          ],
+          currentIndex: 3,
+          selectedItemColor:
+              Colors.grey[600],
+               // Customize the selected item color
+          unselectedItemColor:
+              Colors.grey[600], // Customize the unselected item color
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+          onTap: (index) {
+            switch (index) {
+              case 0:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => UserDashboard()),
+                );
+                break;
+              case 1:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProductPage()),
+                );
+                break;
+              case 2:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductDetailScreen(productId: 1),
+                  ),
+                );
+                break;
+              case 3:
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+                break;
+            }
+          },
+        ),
       ),
     );
   }
