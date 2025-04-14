@@ -1,5 +1,3 @@
-import 'rating.dart';
-
 class Product {
   final int id;
   final String title;
@@ -23,7 +21,7 @@ class Product {
     return Product(
       id: json['id'],
       title: json['title'],
-      price: (json['price'] as num).toDouble(),
+      price: json['price'].toDouble(),
       description: json['description'],
       category: json['category'],
       image: json['image'],
@@ -31,5 +29,26 @@ class Product {
     );
   }
 
-  String get name => title;
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': title,
+    'price': price,
+    'description': description,
+    'category': category,
+    'image': image,
+    'rating': rating.toJson(),
+  };
+}
+
+class Rating {
+  final double rate;
+  final int count;
+
+  Rating({required this.rate, required this.count});
+
+  factory Rating.fromJson(Map<String, dynamic> json) {
+    return Rating(rate: json['rate'].toDouble(), count: json['count']);
+  }
+
+  Map<String, dynamic> toJson() => {'rate': rate, 'count': count};
 }

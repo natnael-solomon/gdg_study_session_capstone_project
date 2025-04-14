@@ -1,7 +1,9 @@
+import 'package:capstone/cart/cart_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/api_service.dart';
 import '../models/product.dart';
-import '../api_service.dart';
+import '../services/user_manager.dart';
 
 class ProductListScreen extends StatefulWidget {
   const ProductListScreen({super.key});
@@ -12,35 +14,56 @@ class ProductListScreen extends StatefulWidget {
 
 class _ProductListScreenState extends State<ProductListScreen> {
   final ApiService _apiService = ApiService();
+  final UserManager _userManager = UserManager();
   List<Product> _products = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _fetchProducts();
+    _loadInitialData();
+    _userManager.addListener(_onUserDataChanged);
   }
 
-  Future<void> _fetchProducts() async {
+  @override
+  void dispose() {
+    _userManager.removeListener(_onUserDataChanged);
+    super.dispose();
+  }
+
+  void _onUserDataChanged() {
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadInitialData() async {
     try {
       final products = await _apiService.getProducts();
       if (!mounted) return;
       setState(() {
-        _products = products;
+        _products = List<Product>.from(products);
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Error loading products: $e',
-            style: GoogleFonts.poppins(),
-          ),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error loading products: $e')));
     }
+  }
+
+  Future<void> _addToCart(Product product) async {
+    await _userManager.addToCart(product);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Added ${product.title} to cart'),
+        duration: const Duration(seconds: 1),
+      ),
+    );
+  }
+
+  Future<void> _toggleFavorite(int productId) async {
+    await _userManager.toggleFavorite(productId);
   }
 
   @override
@@ -59,48 +82,76 @@ class _ProductListScreenState extends State<ProductListScreen> {
         centerTitle: true,
         backgroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: Badge(
+              label: Text('${_userManager.cartItems.length}'),
+              child: const Icon(Icons.shopping_cart),
+            ),
+            onPressed: () => _navigateToCartScreen(context),
+          ),
+        ],
       ),
-      body:
-          _isLoading
-              ? const Center(child: CircularProgressIndicator())
-              : GridView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: _products.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.0,
-                ),
-                itemBuilder: (context, index) {
-                  final product = _products[index];
-                  return ProductCard(product: product);
-                },
-              ),
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) return const Center(child: CircularProgressIndicator());
+    if (_products.isEmpty) {
+      return const Center(child: Text('No products found'));
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      itemCount: _products.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75,
+      ),
+      itemBuilder: (context, index) {
+        final product = _products[index];
+        return ProductCard(
+          product: product,
+          isFavorite: _userManager.favoriteIds.contains(product.id),
+          onFavoritePressed: () => _toggleFavorite(product.id),
+          onAddToCart: () => _addToCart(product),
+        );
+      },
+    );
+  }
+
+  void _navigateToCartScreen(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CartScreen(cartItems: _userManager.cartItems),
+      ),
     );
   }
 }
 
 class ProductCard extends StatelessWidget {
   final Product product;
+  final bool isFavorite;
+  final VoidCallback onFavoritePressed;
+  final VoidCallback onAddToCart;
 
-  const ProductCard({super.key, required this.product});
+  const ProductCard({
+    super.key,
+    required this.product,
+    required this.isFavorite,
+    required this.onFavoritePressed,
+    required this.onAddToCart,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.shade200,
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -117,10 +168,16 @@ class ProductCard extends StatelessWidget {
                     width: double.infinity,
                   ),
                 ),
-                const Positioned(
+                Positioned(
                   top: 8,
                   right: 8,
-                  child: Icon(Icons.favorite_border, color: Colors.white),
+                  child: IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : Colors.white,
+                    ),
+                    onPressed: onFavoritePressed,
+                  ),
                 ),
               ],
             ),
@@ -144,23 +201,26 @@ class ProductCard extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "\$${product.price}",
+                      '\$${product.price.toStringAsFixed(2)}',
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.bold,
                         color: const Color(0xFF6055D8),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF6055D8),
-                        shape: BoxShape.circle,
+                    IconButton(
+                      icon: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF6055D8),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.add,
+                          size: 16,
+                          color: Colors.white,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.add,
-                        size: 16,
-                        color: Colors.white,
-                      ),
+                      onPressed: onAddToCart,
                     ),
                   ],
                 ),

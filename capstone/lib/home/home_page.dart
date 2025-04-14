@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:capstone/products/product_list_screen.dart';
+import 'package:capstone/profile/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart'; 
 
-import '../api_service.dart';
-import '../auth/auth_service.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../models/product.dart';
 import '../search/search_screen.dart';
 import 'product_list.dart';
@@ -93,7 +94,7 @@ class _HomePageState extends State<HomePage> {
             _buildHomeContent(),
             const SearchScreen(),
             const ProductListScreen(),
-            const Center(child: Text('Profile')),
+            const ProfilePage(),
           ],
         ),
       ),
