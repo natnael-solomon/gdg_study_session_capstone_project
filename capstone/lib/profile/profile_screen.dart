@@ -4,6 +4,8 @@ import 'package:capstone/services/user_manager.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 
+import '../auth/login_page.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -164,8 +166,39 @@ class _ProfilePageState extends State<ProfilePage> {
                     width: double.infinity,
                     child: OutlinedButton(
                       onPressed: () async {
-                        await AuthService().signOut();
-                        Navigator.of(context).pushReplacementNamed('/login');
+                        try {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder:
+                                (context) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                          );
+
+                          await AuthService().signOut();
+
+                          if (mounted) {
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pushAndRemoveUntil(
+                              MaterialPageRoute(
+                                builder: (context) => LoginPage(),
+                              ),
+                              (Route<dynamic> route) => false,
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) Navigator.of(context).pop();
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Sign out failed: ${e.toString()}',
+                                ),
+                              ),
+                            );
+                          }
+                        }
                       },
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.red,
