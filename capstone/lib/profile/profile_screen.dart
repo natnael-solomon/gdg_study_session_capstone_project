@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:capstone/services/auth_service.dart'; // Import the AuthService
+import 'package:capstone/services/auth_service.dart';
+import 'package:capstone/services/user_manager.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
-  const ProfilePage({Key? key}) : super(key: key);
+  const ProfilePage({super.key});
 
   @override
   _ProfilePageState createState() => _ProfilePageState();
@@ -10,18 +13,54 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   late Future<Map<String, dynamic>?> futureUserDetails;
+  File? _profileImage;
+  final UserManager _userManager = UserManager();
+  int _orderCount = 0;
+  int _cartItemsCount = 0;
 
   @override
   void initState() {
     super.initState();
-    futureUserDetails =
-        AuthService().getUserDetails(); 
+    futureUserDetails = AuthService().getUserDetails();
+    _loadUserStats();
+  }
+
+  Future<void> _loadUserStats() async {
+    final cartCount = _userManager.cartItems.length;
+    final orderCount = 5; 
+
+    setState(() {
+      _cartItemsCount = cartCount;
+      _orderCount = orderCount;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        _profileImage = File(pickedFile.path);
+      });
+      // upd
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit),
+            onPressed: () {
+              Navigator.pushNamed(context, '/edit-profile');
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<Map<String, dynamic>?>(
         future: futureUserDetails,
         builder: (context, snapshot) {
@@ -36,94 +75,102 @@ class _ProfilePageState extends State<ProfilePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Stack(
-                    alignment: Alignment.bottomRight,
-                    children: <Widget>[
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundImage:
-                            user['photoUrl'] != null
-                                ? NetworkImage(user['photoUrl'])
-                                : const AssetImage("assets/images/person.jpg")
-                                    as ImageProvider,
-                        onBackgroundImageError: (exception, stackTrace) {
-                          print("Error loading image: $exception");
-                        },
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color:
-                              Colors
-                                  .grey[100], // Customize the camera icon background color
-                          shape: BoxShape.circle,
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Stack(
+                      alignment: Alignment.bottomRight,
+                      children: <Widget>[
+                        CircleAvatar(
+                          radius: 60,
+                          backgroundImage:
+                              _profileImage != null
+                                  ? FileImage(_profileImage!)
+                                  : user['photoUrl'] != null
+                                  ? NetworkImage(user['photoUrl'])
+                                  : const AssetImage("assets/images/person.jpg")
+                                      as ImageProvider,
                         ),
-                        padding: const EdgeInsets.all(6),
-                        child: const Icon(
-                          Icons.camera_alt,
-                          size: 18,
-                          color: Colors.black87,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            shape: BoxShape.circle,
+                          ),
+                          padding: const EdgeInsets.all(6),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            size: 18,
+                            color: Colors.black87,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "${user['fullName']}",
+                    user['fullName'] ?? 'No Name',
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '${user['email']}',
-                    style: TextStyle(fontSize: 16, color: Colors.grey[500]),
+                    user['email'] ?? 'No Email',
+                    style: TextStyle(fontSize: 16, color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 24),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildStatCard('Orders', _orderCount.toString()),
+                      _buildStatCard('Cart', _cartItemsCount.toString()),
+                      _buildStatCard('Points', '125'), 
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
                   buildProfileTile(
                     icon: Icons.person_outline,
-                    title: 'Profile',
-                    iconColor: Colors.black87,
-                    textColor: Colors.black87,
-                    tileColor: Colors.white,
-                    arrowColor: Colors.black54,
+                    title: 'Edit Profile',
                     onTap: () {
-                      print('Profile Tapped');
+                      Navigator.pushNamed(context, '/edit-profile');
                     },
                   ),
                   buildProfileTile(
-                    icon: Icons.settings_outlined,
+                    icon: Icons.history,
+                    title: 'Order History',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/order-history');
+                    },
+                  ),
+                  buildProfileTile(
+                    icon: Icons.favorite_border,
+                    title: 'Wishlist',
+                    onTap: () {
+                      Navigator.pushNamed(context, '/wishlist');
+                    },
+                  ),
+                  buildProfileTile(
+                    icon: Icons.settings,
                     title: 'Settings',
-                    iconColor: Colors.black87,
-                    textColor: Colors.black87,
-                    tileColor: Colors.white,
-                    arrowColor: Colors.black54,
                     onTap: () {
-                      print('Settings Tapped');
+                      Navigator.pushNamed(context, '/settings');
                     },
                   ),
-                  buildProfileTile(
-                    icon: Icons.email_outlined,
-                    title: 'Contact',
-                    iconColor: Colors.black87,
-                    textColor: Colors.black87,
-                    tileColor: Colors.white,
-                    arrowColor: Colors.black54,
-                    onTap: () {
-                      print('Contact Tapped');
-                    },
-                  ),
+
                   const SizedBox(height: 32),
                   SizedBox(
                     width: double.infinity,
-                    child: TextButton(
+                    child: OutlinedButton(
                       onPressed: () async {
                         await AuthService().signOut();
                         Navigator.of(context).pushReplacementNamed('/login');
                       },
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.redAccent,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red,
+                        side: const BorderSide(color: Colors.red),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: const Text(
                         'Sign Out',
@@ -141,35 +188,56 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-}
 
-Widget buildProfileTile({
-  required IconData icon,
-  required String title,
-  required VoidCallback onTap,
-  Color? iconColor,
-  Color? textColor,
-  Color? tileColor,
-  Color? arrowColor,
-}) {
-  return Card(
-    color: tileColor ?? Colors.white,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-    child: ListTile(
-      leading: Icon(icon, color: iconColor ?? Colors.black87),
-      title: Text(
-        title,
-        style: TextStyle(
-          fontWeight: FontWeight.w500,
-          color: textColor ?? Colors.black87,
+  Widget _buildStatCard(String title, String value) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            Text(
+              value,
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+            ),
+          ],
         ),
       ),
-      trailing: Icon(
-        Icons.arrow_forward_ios,
-        color: arrowColor ?? Colors.black54,
-        size: 18,
+    );
+  }
+
+  Widget buildProfileTile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      color: Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      child: ListTile(
+        leading: Icon(icon, color: Colors.black87),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.w500,
+            color: Colors.black87,
+          ),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios,
+          color: Colors.black54,
+          size: 18,
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
-    ),
-  );
+    );
+  }
 }

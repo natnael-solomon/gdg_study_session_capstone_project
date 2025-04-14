@@ -17,6 +17,7 @@ class UserManager extends ChangeNotifier {
 
   List<Product> get cartItems => List.unmodifiable(_cartItems);
   Set<int> get favoriteIds => Set.unmodifiable(_favoriteIds);
+  
 
   static const _cartKey = 'cartItems';
   static const _favoritesKey = 'favorites';
@@ -103,6 +104,11 @@ class UserManager extends ChangeNotifier {
 
   Future<void> savePreferences(Map<String, dynamic> prefs) async {
     await _instancePrefs.setString(_preferencesKey, json.encode(prefs));
+  }
+
+  Future<void> clearCart() async {
+       _cartItems.clear();
+       notifyListeners();
   }
 
   Future<void> clearAllData() async {
