@@ -1,23 +1,18 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import 'models/product.dart';
 
 class ApiService {
-  /* Base configuration */
   static const String _baseUrl = 'https://fakestoreapi.com';
   static const Duration _timeout = Duration(seconds: 15);
-
 
   static final ApiService _instance = ApiService._internal();
   factory ApiService() => _instance;
   ApiService._internal();
 
-
   final http.Client _client = http.Client();
 
- 
   Future<List<Product>> getProducts() async {
     return _handleRequest(
       () => _client.get(Uri.parse('$_baseUrl/products')),
@@ -46,6 +41,39 @@ class ApiService {
     );
   }
 
+
+  List<Product> filterAll({
+    required List<Product> products,
+    double? minPrice,
+    double? maxPrice,
+    double? minRating,
+    double? maxRating,
+    String? category,
+    String? searchKeyword,
+    int? minReviewCount,
+  }) {
+    return products.where((p) {
+      final withinPrice =
+          p.price >= (minPrice ?? 0) &&
+          p.price <= (maxPrice ?? double.infinity);
+      final withinRating =
+          p.rating.rate >= (minRating ?? 0) &&
+          p.rating.rate <= (maxRating ?? 5.0);
+      final inCategory =
+          category == null ||
+          category.toLowerCase() == p.category.toLowerCase();
+      final matchesSearch =
+          searchKeyword == null ||
+          p.title.toLowerCase().contains(searchKeyword.toLowerCase());
+      final enoughReviews = p.rating.count >= (minReviewCount ?? 0);
+
+      return withinPrice &&
+          withinRating &&
+          inCategory &&
+          matchesSearch &&
+          enoughReviews;
+    }).toList();
+  }
 
   Future<T> _handleRequest<T>(
     Future<http.Response> Function() request,

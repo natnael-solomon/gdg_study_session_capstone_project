@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthException implements Exception {
   final String message;
@@ -17,6 +18,11 @@ class AuthService {
   AuthService._internal() {
     _auth.authStateChanges().listen((User? user) {
       _currentUser = user;
+      if (user != null) {
+        _setLoggedInStatus(true);
+      } else {
+        _setLoggedInStatus(false);
+      }
     });
   }
 
@@ -25,6 +31,46 @@ class AuthService {
 
   User? _currentUser;
   User? get currentUser => _currentUser;
+
+  Map<String, dynamic>? _userDetails;
+
+  bool get isLoggedIn => _currentUser != null;
+
+  Future<void> _setLoggedInStatus(bool status) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isLoggedIn', status);
+    if (status && _currentUser != null) {
+      await prefs.setString('uid', _currentUser!.uid);
+    }
+  }
+
+  Future<bool> getLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    bool status = prefs.getBool('isLoggedIn') ?? false;
+    return status;
+  }
+
+  Future<Map<String, dynamic>?> getUserDetails() async {
+    if (_userDetails != null) {
+      return _userDetails;
+    }
+
+    if (_currentUser == null) {
+      return null;
+    }
+
+    try {
+      final doc =
+          await _firestore.collection('users').doc(_currentUser!.uid).get();
+      if (doc.exists) {
+        _userDetails = doc.data();
+        return _userDetails;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
 
   Future<void> signUp({
     required String username,
@@ -76,14 +122,13 @@ class AuthService {
       }
 
       _currentUser = userCredential.user;
+      await _setLoggedInStatus(true);
     } on FirebaseAuthException catch (e) {
       throw AuthException(_getAuthErrorMessage(e));
     } on FirebaseException catch (e) {
       throw AuthException(_getFirestoreErrorMessage(e));
     } catch (e) {
-      throw AuthException(
-        'Registration failed. Please try again.',
-      ); 
+      throw AuthException('Registration failed. Please try again.');
     }
   }
 
@@ -99,9 +144,7 @@ class AuthService {
     } on FirebaseException catch (e) {
       throw AuthException(_getFirestoreErrorMessage(e));
     } catch (e) {
-      throw AuthException(
-        'Login failed. Please try again.',
-      ); 
+      throw AuthException('Login failed. Please try again.');
     }
   }
 
@@ -112,7 +155,7 @@ class AuthService {
       if (doc.exists) {
         return doc['email'] as String;
       }
-      /*a dummy email if username doesn't exist to prevent enumeration*/
+      //*a dummy email if username doesn't exist to prevent enumeration*//
       return 'invalid_${DateTime.now().millisecondsSinceEpoch}@dummy.com';
     } catch (e) {
       throw AuthException('Login service unavailable');
@@ -123,6 +166,7 @@ class AuthService {
     try {
       await _auth.signOut();
       _currentUser = null;
+      await _setLoggedInStatus(false);
     } catch (e) {
       throw AuthException('Could not sign out. Please try again.');
     }
@@ -140,7 +184,7 @@ class AuthService {
         return 'Please enter a valid email address';
       case 'wrong-password':
       case 'user-not-found':
-        return 'Invalid credentials'; 
+        return 'Invalid credentials';
       case 'user-disabled':
         return 'This account has been disabled. Contact support';
       case 'operation-not-allowed':
@@ -150,7 +194,7 @@ class AuthService {
       case 'network-request-failed':
         return 'Network error. Please check your connection';
       default:
-        return 'Invalid credentials'; 
+        return 'Invalid credentials';
     }
   }
 

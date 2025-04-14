@@ -17,10 +17,18 @@ class ProductList extends StatelessWidget {
           final product = products[index];
           return Container(
             width: 140,
-            margin: const EdgeInsets.only(right: 12),
+            height: 140,
+            margin: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: Color.fromARGB(255, 248, 247, 247),
               borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.shade300,
+                  blurRadius: 3,
+                  spreadRadius: 1,
+                ),
+              ],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,7 +39,7 @@ class ProductList extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       child: Image.network(
                         product.image,
-                        height: 120,
+                        height: 100,
                         width: 140,
                         fit: BoxFit.cover,
                         loadingBuilder:
