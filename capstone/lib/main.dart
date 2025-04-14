@@ -1,10 +1,10 @@
 import 'package:capstone/services/auth_service.dart';
 import 'package:capstone/auth/login_page.dart';
 import 'package:capstone/home/home_page.dart';
+import 'package:capstone/services/user_manager.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'firebase_options.dart';
-import 'user_repository.dart';
 
 
 void main() async { 
@@ -13,7 +13,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform, 
   );
 
-  await UserRepository.initialize();
+  await UserManager.initializePrefs();
 
   bool isLoggedIn = await AuthService().getLoginStatus();
   runApp(MyApp(isLoggedIn: isLoggedIn));

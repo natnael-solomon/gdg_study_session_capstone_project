@@ -1,129 +1,78 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../checkout/checkout.dart';
 import '../models/product.dart';
-import '../user_repository.dart';
+import '../services/user_manager.dart';
 
 class CartScreen extends StatefulWidget {
-  final List<Product> cartItems;
-
-  const CartScreen({super.key, required this.cartItems});
+  const CartScreen({super.key});
 
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
 
 class _CartScreenState extends State<CartScreen> {
-  late List<Product> _cartItems;
+  final UserManager _userManager = UserManager();
   double _total = 0;
 
   @override
   void initState() {
     super.initState();
-    _cartItems = List.from(widget.cartItems);
     _calculateTotal();
+
+    _userManager.addListener(_onCartUpdated);
+  }
+
+  @override
+  void dispose() {
+    _userManager.removeListener(_onCartUpdated);
+    super.dispose();
+  }
+
+  void _onCartUpdated() {
+    _calculateTotal();
+    if (mounted) setState(() {});
   }
 
   void _calculateTotal() {
-    _total = _cartItems.fold(0, (sum, item) => sum + item.price);
+    _total = _userManager.cartItems.fold(0, (sum, item) => sum + item.price);
   }
 
-  Future<void> _removeItem(int index) async {
-    setState(() {
-      _cartItems.removeAt(index);
-      _calculateTotal();
-    });
-    await UserRepository.saveCartItems(_cartItems);
+  Future<void> _removeItem(Product product) async {
+    await _userManager.removeFromCart(product);
   }
 
   Future<void> _checkout() async {
-    if (_cartItems.isEmpty) {
+    if (_userManager.cartItems.isEmpty) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Your cart is empty!')));
       return;
     }
 
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Confirm Purchase'),
-            content: Text(
-              'Total: \$${_total.toStringAsFixed(2)}\n\nProceed with checkout?',
-              style: GoogleFonts.poppins(),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await _processCheckout();
-                },
-                child: const Text('Confirm'),
-              ),
-            ],
-          ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CheckoutPage()),
     );
-  }
-
-  Future<void> _processCheckout() async {
-    try {
-      // Simulate payment processing
-      await Future.delayed(const Duration(seconds: 1));
-
-      // Clear cart after successful checkout
-      await UserRepository.saveCartItems([]);
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Purchase successful! \$${_total.toStringAsFixed(2)}',
-            style: GoogleFonts.poppins(),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-
-      setState(() {
-        _cartItems.clear();
-        _total = 0;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Checkout failed: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final cartItems = _userManager.cartItems;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          'Your Cart (${_cartItems.length})',
+          'Your Cart (${cartItems.length})',
           style: GoogleFonts.poppins(),
         ),
         actions: [
-          if (_cartItems.isNotEmpty)
+          if (cartItems.isNotEmpty)
             IconButton(
               icon: const Icon(Icons.delete_forever),
               tooltip: 'Clear Cart',
               onPressed: () async {
-                await UserRepository.saveCartItems([]);
-                if (!mounted) return;
-                setState(() {
-                  _cartItems.clear();
-                  _total = 0;
-                });
+                await _userManager.clearAllData();
               },
             ),
         ],
@@ -132,7 +81,7 @@ class _CartScreenState extends State<CartScreen> {
         children: [
           Expanded(
             child:
-                _cartItems.isEmpty
+                cartItems.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -147,9 +96,9 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     )
                     : ListView.builder(
-                      itemCount: _cartItems.length,
+                      itemCount: cartItems.length,
                       itemBuilder: (context, index) {
-                        final item = _cartItems[index];
+                        final item = cartItems[index];
                         return Dismissible(
                           key: Key(item.id.toString()),
                           background: Container(
@@ -161,7 +110,7 @@ class _CartScreenState extends State<CartScreen> {
                               color: Colors.white,
                             ),
                           ),
-                          onDismissed: (direction) => _removeItem(index),
+                          onDismissed: (direction) => _removeItem(item),
                           child: ListTile(
                             leading: Image.network(
                               item.image,
@@ -184,14 +133,14 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                             trailing: IconButton(
                               icon: const Icon(Icons.delete),
-                              onPressed: () => _removeItem(index),
+                              onPressed: () => _removeItem(item),
                             ),
                           ),
                         );
                       },
                     ),
           ),
-          if (_cartItems.isNotEmpty)
+          if (cartItems.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -231,6 +180,7 @@ class _CartScreenState extends State<CartScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
+                        textStyle: TextStyle(color: Colors.white),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         backgroundColor: const Color(0xFF6055D8),
                       ),

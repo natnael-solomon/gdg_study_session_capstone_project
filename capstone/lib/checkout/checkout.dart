@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(CheckOut());
-}
+import 'package:google_fonts/google_fonts.dart';
+import '../models/product.dart';
+import '../services/user_manager.dart';
 
 class CheckOut extends StatelessWidget {
   const CheckOut({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: CheckoutPage());
+    return MaterialApp(
+      theme: ThemeData(
+        primarySwatch: Colors.deepPurple,
+        textTheme: GoogleFonts.poppinsTextTheme(),
+      ),
+      home: CheckoutPage(),
+    );
   }
 }
 
@@ -21,411 +26,362 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  // This is the variable that holds the selected payment method
+  final UserManager _userManager = UserManager();
   String? _selectedPaymentMethod;
+  bool _isProcessing = false;
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
 
-        centerTitle: true,
-        title: Text('Checkout'),
-        leading: IconButton(
-          // Custom back button on the left
-          icon: Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context); // Go back when pressed
-          },
+  Future<void> _loadUserData() async {
+    final prefs = await _userManager.getPreferences();
+    _addressController.text = prefs['address'] ?? '';
+  }
+
+  double get _total {
+    return _userManager.cartItems.fold(0, (sum, item) => sum + item.price);
+  }
+
+
+  Future<void> _processCheckout() async {
+    if (_selectedPaymentMethod == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a payment method')),
+      );
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+
+    try {
+      
+      await _userManager.savePreferences({
+        'address': _addressController.text,
+        'lastPaymentMethod': _selectedPaymentMethod,
+      });
+
+    
+      final orderTotal = _total; 
+
+      await Future.delayed(const Duration(seconds: 2));
+
+      await _userManager.clearCart();
+
+      if (!mounted) return;
+
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Payment successful! \$${orderTotal.toStringAsFixed(2)}',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
         ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      );
+
+      Navigator.of(context).popUntil((route) => route.isFirst);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment failed: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  Widget _buildPaymentMethodOption({
+    required String method,
+    required String label,
+    required String iconAsset,
+    Color? iconColor,
+  }) {
+    return GestureDetector(
+      onTap: () => setState(() => _selectedPaymentMethod = method),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color:
+                _selectedPaymentMethod == method
+                    ? Colors.deepPurple
+                    : Colors.grey.shade300,
+            width: 2,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
           children: [
-            // Location and Time Information
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(
-                          6.0,
-                        ), // adjust for circle size
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Image.asset(
-                          'assets/loc.png',
-                          width: 30,
-                          height: 30,
-                          color: Colors.deepPurple,
-                        ),
-                      ),
-                      const SizedBox(width: 17.0),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text(
-                            '325 15th Eighth Avenue, New York',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text('Saepe eaque fugiat ea voluptatum veniam.'),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20.0),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6.0),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Image.asset(
-                          'assets/clock.png',
-                          width: 30,
-                          height: 30,
-                          color: Colors.deepPurple,
-                        ),
-                      ),
-                      SizedBox(width: 6.0),
-                      Text('6:00 pm, Wednesday 20'),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            // Order Summary
             Container(
-              color: Colors.grey[100], // Light gray background
-              child: Padding(
-                padding: const EdgeInsets.all(30.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Order Summary',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 18.0,
-                      ),
-                    ),
-                    const SizedBox(height: 12.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [Text('Items'), Text('3')],
-                    ),
-                    const SizedBox(height: 8.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [Text('Subtotal'), Text('\$423')],
-                    ),
-                    const SizedBox(height: 8.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [Text('Discount'), Text('\$4')],
-                    ),
-                    const SizedBox(height: 8.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [Text('Delivery Charges'), Text('\$2')],
-                    ),
-                    const SizedBox(height: 12.0),
-                    const Divider(),
-                    const SizedBox(height: 8.0),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          'Total',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        Text(
-                          '\$423',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    ),
-                  ],
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                shape: BoxShape.circle,
+              ),
+              child: Image.asset(
+                iconAsset,
+                width: 24,
+                height: 24,
+                color: iconColor,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Text(label, style: GoogleFonts.poppins(fontSize: 16)),
+            const Spacer(),
+            if (_selectedPaymentMethod == method)
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
+                  color: Colors.deepPurple,
+                  shape: BoxShape.circle,
                 ),
+                child: const Icon(Icons.check, color: Colors.white, size: 16),
               ),
-            ),
-
-            // Choose Payment Method
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Choose payment method',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18.0,
-                    ),
-                  ),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (_selectedPaymentMethod == 'paypal') {
-                          _selectedPaymentMethod =
-                              null; // Deselect to hide the check
-                        } else {
-                          _selectedPaymentMethod =
-                              'paypal'; // Select to show the check
-                        }
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.transparent, width: 2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors
-                                          .grey
-                                          .shade200, // Permanent light gray circle
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Image.asset(
-                                  'assets/paypal.png',
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Text('Paypal'),
-                            ],
-                          ),
-                          // Checkmark visibility depends on selection
-                          Visibility(
-                            visible: _selectedPaymentMethod == 'paypal',
-                            child: Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: Colors.grey.shade300,
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check,
-                                color: const Color.fromARGB(255, 114, 38, 149),
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // GestureDetector for Credit Card option
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedPaymentMethod = 'credit_card';
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color:
-                              _selectedPaymentMethod == 'credit_card'
-                                  ? const Color.fromARGB(
-                                    255,
-                                    164,
-                                    185,
-                                    201,
-                                  ) // Border color for the selected item
-                                  : const Color.fromARGB(0, 130, 51, 158),
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(6),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors
-                                          .grey
-                                          .shade200, // light gray background
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Image.asset(
-                                  'assets/creditcard.png', // Your Credit Card image asset
-                                  width: 15,
-                                  height: 15,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Text('Credit Card'),
-                            ],
-                          ),
-                          // Display checkmark on the right when selected
-                          if (_selectedPaymentMethod == 'credit_card')
-                            Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color:
-                                    Colors
-                                        .grey
-                                        .shade300, // Grey background when selected
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check,
-                                color: const Color.fromARGB(255, 114, 38, 149),
-                                size: 18,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // GestureDetector for Cash option
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedPaymentMethod = 'cash';
-                      });
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        vertical: 6,
-                        horizontal: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color:
-                              _selectedPaymentMethod == 'cash'
-                                  ? Colors
-                                      .blue // Border color for the selected item
-                                  : Colors.transparent,
-                          width: 2,
-                        ),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(5),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Colors
-                                          .grey
-                                          .shade200, // light gray background
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Image.asset(
-                                  'assets/coin.png', // Your Cash image asset
-                                  width: 20,
-                                  height: 20,
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Text('Cash'),
-                            ],
-                          ),
-                          // Display checkmark on the right when selected
-                          if (_selectedPaymentMethod == 'cash')
-                            Container(
-                              padding: EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color:
-                                    Colors
-                                        .grey
-                                        .shade300, // Grey background when selected
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.check,
-                                color: const Color.fromARGB(255, 114, 38, 149),
-                                size: 18,
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 8.0),
-
-                  // "Add new payment method" option
-                  InkWell(
-                    onTap: () {
-                      // Handle adding a new payment method
-                      print("Add new payment method tapped");
-                    },
-                    child: Row(
-                      children: const [
-                        Icon(Icons.add),
-                        SizedBox(width: 8.0),
-                        Text('Add new payment method'),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 16.0),
-
-                  // "Check Out" Button
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Handle checkout logic
-                          print(
-                            "Checkout tapped with payment method: $_selectedPaymentMethod",
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              Colors.deepPurple, // Purple background
-                          foregroundColor: Colors.white, // White text
-                        ),
-                        child: const Text('Check Out'),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildOrderItem(Product product) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Image.network(
+              product.image,
+              width: 60,
+              height: 60,
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  product.title,
+                  style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '\$${product.price.toStringAsFixed(2)}',
+                  style: GoogleFonts.poppins(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cartItems = _userManager.cartItems;
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Checkout',
+          style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body:
+          _isProcessing
+              ? const Center(child: CircularProgressIndicator())
+              : SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Delivery Address',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _addressController,
+                      decoration: InputDecoration(
+                        hintText: 'Enter your delivery address',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.location_on),
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 16),
+
+                    Text(
+                      'Delivery Time',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        const Icon(Icons.access_time, color: Colors.deepPurple),
+                        const SizedBox(width: 12),
+                        Text('30-45 minutes', style: GoogleFonts.poppins()),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'Your Order (${cartItems.length})',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...cartItems.map(_buildOrderItem).toList(),
+                    const SizedBox(height: 16),
+                    const Divider(),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Subtotal', style: GoogleFonts.poppins()),
+                        Text(
+                          '\$${_total.toStringAsFixed(2)}',
+                          style: GoogleFonts.poppins(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Delivery Fee', style: GoogleFonts.poppins()),
+                        Text('\$2.99', style: GoogleFonts.poppins()),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Total',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        Text(
+                          '\$${(_total + 2.99).toStringAsFixed(2)}',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.deepPurple,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    Text(
+                      'Payment Method',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _buildPaymentMethodOption(
+                      method: 'credit_card',
+                      label: 'Credit Card',
+                      iconAsset: 'assets/creditcard.png',
+                    ),
+                    _buildPaymentMethodOption(
+                      method: 'paypal',
+                      label: 'PayPal',
+                      iconAsset: 'assets/paypal.png',
+                      iconColor: Colors.blue[800],
+                    ),
+                    _buildPaymentMethodOption(
+                      method: 'cash',
+                      label: 'Cash on Delivery',
+                      iconAsset: 'assets/coin.png',
+                    ),
+                    const SizedBox(height: 16),
+
+                    TextField(
+                      controller: _notesController,
+                      decoration: InputDecoration(
+                        hintText: 'Add delivery notes (optional)',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        prefixIcon: const Icon(Icons.note),
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(height: 24),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                        textStyle: TextStyle(color: Colors.white),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          backgroundColor: Colors.deepPurple,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: _processCheckout,
+                        child: Text(
+                          'Complete Payment',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _addressController.dispose();
+    _notesController.dispose();
+    super.dispose();
   }
 }

@@ -218,7 +218,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   MaterialPageRoute(
                     builder:
                         (context) =>
-                            CartScreen(cartItems: _userManager.cartItems),
+                            CartScreen(),
                   ),
                 ),
           ),

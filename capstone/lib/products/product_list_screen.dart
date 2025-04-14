@@ -22,6 +22,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   void initState() {
     super.initState();
     _loadInitialData();
+
     _userManager.addListener(_onUserDataChanged);
   }
 
@@ -127,7 +128,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => CartScreen(cartItems: _userManager.cartItems),
+        builder: (context) => CartScreen(),
       ),
     );
   }
